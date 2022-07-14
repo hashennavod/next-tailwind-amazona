@@ -5,13 +5,18 @@ import{XCircleIcon} from'@heroicons/react/outline'
 import Layout from '../components/Layout';
 import { Store } from '../utils/Store';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic'
 
-export default function CartScreen() {
+function CartScreen() {
   const router=useRouter();
   const{state,dispatch}=useContext(Store);
   const{cart:{cartItems},}=state;
   const removeItemHandler=(item)=>{
     dispatch({type:'CART_REMOVE_ITEM',payload:item});
+  }
+  const updateCartHandler=(item,qty)=>{
+    const quantity=Number(qty);
+    dispatch({type:'CART_ADD_ITEM',payload:{...item,quantity}});
   }
   return (
    <Layout title="Shoping Cart">
@@ -21,15 +26,15 @@ export default function CartScreen() {
         Cart is empty.<Link href="/">Go Shopping</Link>
       </div>
     ):(
-      <div className='grid md:grid-cols-4 md-gap-5'>
+      <div className='grid md:grid-cols-4 md:gap-5'>
         <div className='overfolw-x-auto md:col-span-3'>
           <table className='min-w-full'>
             <thead className='border-b'>
               <tr>
-                <td className='px-5 text-left'>Item</td>
-                <td className='p-5 text-right'>Quantity</td>
-                <td className='p-5 text-right'>Price</td>
-                <td className='p-5 text-center'>Action</td>
+                <td className='px-5 text-left font-bold'>Item</td>
+                <td className='p-5 text-right font-bold'>Quantity</td>
+                <td className='p-5 text-right font-bold'>Price</td>
+                <td className='p-5 text-center font-bold'>Action</td>
               </tr>
             </thead>
             <tbody>
@@ -49,7 +54,13 @@ export default function CartScreen() {
                       </a>                      
                     </Link>                    
                   </td>
-                  <td className='p-5 text-right'>{item.quantity}</td>
+                  <td className='p-5 text-right'>
+                    <select value={item.quantity} onChange={(e)=>updateCartHandler(item,e.target.value)}>
+                      {[...Array(item.countInStock).keys()].map((x)=>(
+                        <option key={x+1} value={x+1}>{x+1}</option>
+                      ))}
+                    </select>
+                  </td>
                   <td className='p-5 text-right'>{item.price}</td>
                   <td className='p-5 text-center'>
                     <button onClick={()=>removeItemHandler(item)}>
@@ -72,7 +83,7 @@ export default function CartScreen() {
             <li>
               <button 
               className='primary-button w-full'
-              onClick={()=>router.push('shipping')}>Check Out</button>
+              onClick={()=>router.push('login?redirect=/shipping')}>Check Out</button>
             </li>
           </ul>
         </div>
@@ -81,3 +92,4 @@ export default function CartScreen() {
    </Layout>
   )
 }
+export default dynamic(()=>Promise.resolve(CartScreen),{ssr:false});
